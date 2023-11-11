@@ -1,0 +1,35 @@
+link(rel='stylesheet', type='text/css', href='../index.css')
+body
+  .container
+    .title February 2019 Week 6
+    .days
+      .filler
+      .filler
+      .day Sun 3
+      .day Mon 4
+      .day Tue 5
+      .day.current Wed 6
+      .day Thu 7
+      .day Fri 8
+      .day Sat 9
+    .content
+      each val, index in ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23' ]
+        .time(style='grid-row:'+[index*2+(index!=0 ? 1: 0)])= val + ":00"
+        .time(style='grid-row:'+[(index+1)*2])= val + ":30"
+      .filler-col
+      - var n = 3;
+      .col(style='grid-column:'+n++).weekend
+      while n < 9
+        .col(style='grid-column:'+n++)
+      .col(style='grid-column:'+n++).weekend
+      
+      - var n = 1
+      - var grid_rows = 47
+      while n < grid_rows
+        .row(style='grid-row:'+n++)
+      .event.event1.calendar1 Event 1
+      .event.event2.calendar2 Event 2
+      .event.event3.calendar2 Event 3
+      .event.event4.calendar1 Event 4
+      .current-time
+        .circle
