@@ -1,29 +1,84 @@
+@import url("https://fonts.googleapis.com/css?family=Nunito");
+:root {
+  font-family: "Nunito", sans-serif;
+}
+
+.center {
+  text-align: center;
+}
+
+.weekend {
+  background-color: #f1f3f4;
+}
+
+.select-container {
+  display: flex;
+  justify-content: center;
+}
+
+#playerName {
+  margin-bottom: 20px;
+  border-color: #aaaaaa;
+  border-width: 2px;
+  font-size: 1em;
+  padding: 4px 10px;
+}
+
+.titlebar {
+  background: #217346;
+  text-align: center;
+  display: grid;
+  place-content: center space-between;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  grid-auto-flow: column;
+}
+
+.titlebar .left {
+  grid-column: span 1;
+}
+
+button.direction {
+  width: 5em;
+  height: 2.25em;
+}
+
+.box {
+  border-right: 1px solid #dadce0;
+  border-bottom: 1px solid #dadce0;
+}
+
+.box:hover {
+  background-color: #ccc;
+}
+
+.filler-box {
+  grid-column: 1;
+  grid-row: 33;
+  visibility: hidden;
+}
+
+.highlight {
+  background-color: #971b25;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  background: #fff;
+  background: #e2e2e2;
 }
 
 .container {
-  width: 75%;
-  margin-left: 12.5%;
-  height: 50%;
+  border: #000 1px solid;
+  width: 90%;
+  margin: auto;
   display: grid;
-  grid-template-rows: 3em 3em auto;
-  position: absolute;
-}
-
-.title {
-  background: #217346;
-  text-align: center;
-  display: grid;
-  place-content: center;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  grid-template-rows: 2em 2em auto;
+  position: relative;
 }
 
 .days {
@@ -33,7 +88,7 @@ body {
   text-align: center;
   grid-template-columns: 3em 10px repeat(7, 1fr);
   position: sticky;
-  top: 3em;
+  top: 2em;
   z-index: 10;
   border-bottom: 2px solid #dadce0;
 }
@@ -45,7 +100,8 @@ body {
 .content {
   display: grid;
   grid-template-columns: 3em 10px repeat(7, 1fr);
-  grid-template-rows: repeat(47, 3em);
+  grid-template-rows: repeat(33, 2em);
+  background: #fff;
 }
 
 .time {
@@ -61,7 +117,7 @@ body {
 
 .col {
   border-right: 1px solid #dadce0;
-  grid-row: 1/span 47;
+  grid-row: 1/span 33;
   grid-column: span 1;
 }
 
@@ -82,40 +138,6 @@ body {
   margin-right: 10px;
   font-weight: bold;
   font-size: 80%;
-}
-
-.weekend {
-  background-color: #f1f3f4;
-}
-
-.calendar1 {
-  background-color: #d7dbef;
-  border-color: #bcc3e5;
-}
-
-.calendar2 {
-  background-color: #b3e1f7;
-  border-color: #81cdf2;
-}
-
-.event1 {
-  grid-column: 3;
-  grid-row: 9/span 4;
-}
-
-.event2 {
-  grid-column: 5;
-  grid-row: 10/span 6;
-}
-
-.event3 {
-  grid-column: 7;
-  grid-row: 8/span 10;
-}
-
-.event4 {
-  grid-column: 8;
-  grid-row: 21/span 2;
 }
 
 .current-time {
@@ -139,4 +161,4 @@ body {
 
 .current {
   font-weight: bold;
-}/*# sourceMappingURL=index.css.map */
+}

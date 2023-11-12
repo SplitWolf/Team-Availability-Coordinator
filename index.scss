@@ -1,38 +1,89 @@
-$title-height: 3em;
-$days-height: 3em;
+$title-height: 2em;
+$days-height: 2em;
 $time-width: 3em;
-$time-height: 3em;
+$time-height: 2em;
 $grid-color: #dadce0;
-$grid-rows: 47;
+$grid-rows: 33;
 $calendar-template: $time-width 10px repeat(7, 1fr);
 $current-time-color: #ea4335;
+
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+:root {
+  font-family: 'Nunito',sans-serif;
+}
+
+.center {
+  text-align: center;
+}
+.weekend {
+  background-color: #f1f3f4;
+}
+
+.select-container {
+  display: flex;
+  justify-content: center;
+}
+
+#playerName {
+  margin-bottom: 20px;
+  border-color: #aaaaaa;
+  border-width: 2px;
+  font-size: 1em;
+  padding: 4px 10px;
+}
+
+.titlebar {
+  background: #217346;
+  text-align: center;
+  display: grid;
+  place-content: center space-between;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  grid-auto-flow: column;
+}
+.titlebar .left {
+  grid-column: span 1;
+}
+button.direction {
+  width: 5em;
+  height: $title-height+0.25;
+}
+.box {
+  border-right: 1px solid $grid-color;
+  border-bottom: 1px solid $grid-color;
+  // grid-row: 1 / span 2;
+  // grid-column: span 1;
+}
+.box:hover {
+  background-color: #ccc
+}
+.filler-box {
+  grid-column: 1;
+  grid-row: 33;
+  visibility: hidden;
+}
+.highlight {
+  background-color: #971b25
+}
+
 
 * {
   box-sizing: border-box;
 }
 
 body {
-  background: #fff;
+  background: #e2e2e2;
 }
 
 .container {
-  width: 75%;
-  margin-left: 12.5%;
-  height: 50%;
+  border: #000 1px solid;
+  width: 90%;
+  margin: auto;
   display: grid;
   grid-template-rows: $title-height $days-height auto;
-  position: absolute;
-}
-
-.title {
-  background: #217346;
-  text-align: center;
-  display: grid;
-  place-content: center;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: relative;
 }
 
 .days {
@@ -55,6 +106,7 @@ body {
   display: grid;
   grid-template-columns: $calendar-template;
   grid-template-rows: repeat($grid-rows, $time-height);
+  background: #fff;
 }
 
 .time {
@@ -93,39 +145,37 @@ body {
   font-size: 80%;
 }
 
-.weekend {
-  background-color: #f1f3f4;
-}
 
-.calendar1 {
-  background-color: #d7dbef;
-  border-color: #bcc3e5;
-}
 
-.calendar2 {
-  background-color: #b3e1f7;
-  border-color: #81cdf2;
-}
+// .calendar1 {
+//   background-color: #d7dbef;
+//   border-color: #bcc3e5;
+// }
 
-.event1 {
-  grid-column: 3;
-  grid-row: 9 / span 4;
-}
+// .calendar2 {
+//   background-color: #b3e1f7;
+//   border-color: #81cdf2;
+// }
 
-.event2 {
-  grid-column: 5;
-  grid-row: 10 / span 6;
-}
+// .event1 {
+//   grid-column: 3;
+//   grid-row: 9 / span 4;
+// }
 
-.event3 {
-  grid-column: 7;
-  grid-row: 8 / span 10;
-}
+// .event2 {
+//   grid-column: 5;
+//   grid-row: 10 / span 6;
+// }
 
-.event4 {
-  grid-column: 8;
-  grid-row: 21 / span 2;
-}
+// .event3 {
+//   grid-column: 7;
+//   grid-row: 8 / span 10;
+// }
+
+// .event4 {
+//   grid-column: 8;
+//   grid-row: 21 / span 2;
+// }
 
 .current-time {
   grid-column: 7;
