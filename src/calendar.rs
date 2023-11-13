@@ -1,6 +1,8 @@
 use yew::prelude::*;
 use chrono::Datelike;
 use chrono::Days as Day;
+use std::fmt;
+use std::cmp;
 
 #[derive(Properties, PartialEq)]
 pub struct CalendarProps {
@@ -11,15 +13,44 @@ pub struct CalendarProps {
 struct DayNumbers {
     numbers_from_sun: Vec<u32>
 }
-#[function_component]
-fn TimeGrid() -> Html {
-    let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
-    let state: UseStateHandle<Vec<u32>> = use_state(|| vec![]);
-    // Collection of box ids
-    //  for each boxid in box
-    //  box add class hilighted
+#[derive(Properties, PartialEq)]
+struct TimeGridProps {
+    SelectMode: Mode,
+    Color: HighlightColor
+}
+#[derive(PartialEq,Clone, Copy)]
+enum Mode  {
+    Single,
+    Area
+}
+#[derive(PartialEq)]
+enum HighlightColor {
+    Red,
+    Green,
+    Yellow,
+    None
+}
 
-    
+impl fmt::Display for HighlightColor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            HighlightColor::Red => write!(f, "red"),
+            HighlightColor::Yellow => write!(f, "yellow"),
+            HighlightColor::Green => write!(f, "green"),
+            HighlightColor::None => write!(f, "")
+        }
+    }
+}
+
+#[function_component]
+fn TimeGrid(TimeGridProps { SelectMode, Color }: &TimeGridProps) -> Html {
+    let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
+    let highlightStateRed: UseStateHandle<Vec<u32>> = use_state(|| vec![]);
+    let highlightStateYellow: UseStateHandle<Vec<u32>> = use_state(|| vec![]);
+    let highlightStateGreen: UseStateHandle<Vec<u32>> = use_state(|| vec![]);
+    let selectState = use_state(|| 0);
+    let selectMode = SelectMode;
+    let color = Color;
 
     let n: Vec<u32> = (0..231).collect();
     html! {
@@ -41,31 +72,59 @@ fn TimeGrid() -> Html {
                     n.into_iter()
                     .map(| i | {
                         let on_click = {
-                            let state = state.clone();
+                            let state = if color == &HighlightColor::Red {
+                                highlightStateRed.clone()
+                            } else if color == &HighlightColor::Yellow {
+                                highlightStateYellow.clone()
+                            } else if color == &HighlightColor::Green {
+                                highlightStateGreen.clone()
+                            } else {
+                                highlightStateGreen.clone()
+                            };
+                            let mode = selectMode.clone();
+                            let firstSelect = selectState.clone();
+
                             Callback::from(move | toAdd: u32| { 
                                 let mut newSate = state.to_vec().clone();
-                                if newSate.contains(&toAdd) {
-                                    newSate.remove(newSate.iter().position(|&r| r == toAdd).unwrap());
+                                if mode == Mode::Area {
+                                    if *firstSelect == 0 {
+                                        firstSelect.set(toAdd+1);
+                                       newSate.push(toAdd);
+                                    } else {
+                                        let selectRangeCol: u32 = (cmp::max(toAdd%7,(*firstSelect-1)%7))-(cmp::min(toAdd%7,(*firstSelect-1)%7));
+                                        let selectRangeRow: u32 = (cmp::max(toAdd/7,(*firstSelect-1)/7))-(cmp::min(toAdd/7,(*firstSelect-1)/7));
+                                        let mut toAddVec: Vec<u32> = vec![];
+                                        let mut finalToAdd: Vec<u32> = vec![];
+                                        let initBox = cmp::min(toAdd/7,(*firstSelect-1)/7)*7+cmp::min(toAdd%7,(*firstSelect-1)%7);
+                                        for n in 0..selectRangeCol+1 {
+                                            toAddVec.push(initBox+n);
+                                            for n in 0..selectRangeRow+1 {
+                                                toAddVec.iter().for_each(| value | {
+                                                    finalToAdd.push(value+(7*n));
+                                                });
+                                            }
+                                        }
+                                        newSate.append(&mut finalToAdd);
+                                        firstSelect.set(0);
+                                    }
                                 } else {
-                                    newSate.push(toAdd);
+                                    if newSate.contains(&toAdd) {
+                                        newSate.remove(newSate.iter().position(|&r| r == toAdd).unwrap());
+                                    } else {
+                                        newSate.push(toAdd);
+                                    }
                                 }
                                 state.set(newSate);
                             })
                         };
-                        html! {
-                            if i % 7 == 0 || i % 7 == 6 {
-                                if state.contains(&i) {
-                                    <div class={classes!("box","highlight","weekend")} id={i.to_string() } onclick={move |_| on_click.clone().emit(i)}/>
-                                } else {
-                                    <div class={classes!("box","weekend")} id={i.to_string()} onclick={move |_| on_click.emit(i)}/>
-                                }
-                            } else {
-                                if state.contains(&i) {
-                                    <div class={classes!("box","highlight")} id={i.to_string()} onclick={move |_| on_click.emit(i)}/>
-                                } else {
-                                    <div class={classes!("box")} id={i.to_string()} onclick={move |_| on_click.emit(i)}/>
-                                }
-                            }
+                        if highlightStateRed.contains(&i) {
+                            colorBoxDiv(HighlightColor::Red, i % 7 == 0 || i % 7 == 6, i, on_click)
+                        } else if highlightStateYellow.contains(&i) {
+                            colorBoxDiv(HighlightColor::Yellow, i % 7 == 0 || i % 7 == 6, i, on_click)
+                        } else if highlightStateGreen.contains(&i) {
+                            colorBoxDiv(HighlightColor::Green, i % 7 == 0 || i % 7 == 6, i, on_click)
+                        } else {
+                            colorBoxDiv(HighlightColor::None, i % 7 == 0 || i % 7 == 6, i, on_click)
                         }
                     }).collect::<Html>()
                 }
@@ -74,6 +133,17 @@ fn TimeGrid() -> Html {
     }
 }
 
+fn colorBoxDiv(color: HighlightColor, weekend: bool, id: u32, on_click: Callback<u32>) -> Html {
+    return if weekend {
+        html! {
+            <div class={classes!("box","weekend",format!("highlight-{}",color))} id={id.to_string()} onclick={move |_| on_click.emit(id)}/>
+        }
+    } else {
+        html! {
+            <div class={classes!("box",format!("highlight-{}",color))} id={id.to_string()} onclick={move |_| on_click.emit(id)}/>
+        }
+    }
+}
 
 #[function_component]
 fn Days(DayNumbers{ numbers_from_sun }: &DayNumbers) -> Html {
@@ -142,7 +212,7 @@ pub fn Calendar(CalendarProps { weekOffset, on_click }: &CalendarProps) -> Html 
                 <button class="direction" key="right" onclick={on_right_clicked.clone()}>{ ">" }</button>
                 </div>
                 <Days numbers_from_sun={numss}/>
-                <TimeGrid />
+                <TimeGrid SelectMode={Mode::Area} Color={HighlightColor::Yellow} />
             </div>
             <p> {  date.weekday().num_days_from_sunday() } </p>
             <p> { date.date_naive().weekday().to_string() } </p>
