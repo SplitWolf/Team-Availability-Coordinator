@@ -64,10 +64,15 @@ button.direction {
   grid-row: 33;
   visibility: hidden;
 }
-.highlight {
-  background-color: #971b25
+.highlight-red {
+  background-color: #f00;
 }
-
+.highlight-yellow {
+  background-color: #ff0;
+}
+.highlight-green {
+  background-color: #0f0;
+}
 
 * {
   box-sizing: border-box;
