@@ -2,32 +2,30 @@
 
 mod calendar;
 
-use chrono::offset;
 use yew::prelude::*;
 use calendar::Calendar;
 
 #[derive(Properties, PartialEq)]
-struct Players {
-    players: Vec<String>
+struct SelectMenuProps {
+    id: String,
+    options: Vec<String>,
 }
 
 #[function_component]
-fn PlayerSelect(Players { players }: &Players) -> Html {
+fn SelectMenu(SelectMenuProps { id, options}: &SelectMenuProps ) -> Html {
     html! {
-        <div class={classes!("select-container")}>
-            <select id="playerName">
-            {
-                players.into_iter().map(|name| {
-                    html!{ 
-                        <option>
-                            {name}
-                        </option>
-                    }
-                }).collect::<Html>()
-            }
-            </select>
-        </div>
-    }
+        <select id={id.clone()}>
+        {
+            options.into_iter().map(|name| {
+                html!{ 
+                    <option>
+                        {name}
+                    </option>
+                }
+            }).collect::<Html>()
+        }
+        </select>
+}
 }
 
 #[function_component]
@@ -40,11 +38,18 @@ fn App() -> Html {
         }
     };
     let players: Vec<String> = vec!["Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"].into_iter().map(String::from).collect();
+    let modes: Vec<String> = vec!["Single", "Area"].into_iter().map(String::from).collect();
+    let colors: Vec<String> = vec!["Green", "Yellow","Red" ].into_iter().map(String::from).collect();
+
     html! {
         <body>
             <h1 class={classes!("center")}> { "Team Availablity Coordinator" }</h1>
 
-            <PlayerSelect players={players} />
+            <div class={classes!("select-container")}>
+                <SelectMenu id="playerName" options={players} />
+                <SelectMenu id="playerName" options={modes} />
+                <SelectMenu id="playerName" options={colors} />
+            </div>
             <Calendar weekOffset={*offset} {on_click}/>
             <p>{ *offset }</p>
         </body>
