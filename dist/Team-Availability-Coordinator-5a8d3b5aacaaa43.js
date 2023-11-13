@@ -643,12 +643,12 @@ function __wbg_get_imports() {
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbindgen_closure_wrapper2492 = function(arg0, arg1, arg2) {
-        const ret = makeClosure(arg0, arg1, 326, __wbg_adapter_20);
+    imports.wbg.__wbindgen_closure_wrapper2617 = function(arg0, arg1, arg2) {
+        const ret = makeClosure(arg0, arg1, 335, __wbg_adapter_20);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper5012 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 442, __wbg_adapter_23);
+    imports.wbg.__wbindgen_closure_wrapper5218 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 451, __wbg_adapter_23);
         return addHeapObject(ret);
     };
 
@@ -690,7 +690,7 @@ async function __wbg_init(input) {
     if (wasm !== undefined) return wasm;
 
     if (typeof input === 'undefined') {
-        input = new URL('Team-Availability-Coordinator-cdef094bf9c091e7_bg.wasm', import.meta.url);
+        input = new URL('Team-Availability-Coordinator-5a8d3b5aacaaa43_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
