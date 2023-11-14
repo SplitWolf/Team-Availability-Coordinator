@@ -36,13 +36,17 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
     let color = select_color.get();
     let toAdd = 0;
 
+    let test = move |_| {
+        set_select_current.update(|n| *n = 1);
+    };
+
     view! {
         <div class="content">
             { time.into_iter()
                 .enumerate()
                 .map(| (index, time) | {
                 view! {
-                        <div class="time" style={"grid-row:".to_owned() + &(index*2+(if index !=0 {1} else {0})).to_string()}>{ format!("{}:00", time) }</div>
+                        <div class="time" style={"grid-row:".to_owned() + &(index*2+(if index !=0 {1} else {0})).to_string()} on:click=test>{ format!("{}:00", time) }</div>
                         <div class="time" style={"grid-row:".to_owned() + &((index+1)*2).to_string()}>{ format!("{}:30", time)}</div>
                 }}).collect_view()
             }
@@ -70,7 +74,8 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
 fn colorBoxDiv(color: HighlightColor, weekend: bool, id: u32) -> impl IntoView {
     return if weekend {
         view! {
-            <div class=format!("box weekend highlight-{}",color) id={id.to_string()}/>
+            // on:click=move |_| { highlightArray.update(|n| n.push(id)); }
+            <div class=format!("box weekend highlight-{}",color) id={id.to_string()} />
         }
     } else {
         view! {
