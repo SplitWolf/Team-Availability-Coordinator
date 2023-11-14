@@ -2,7 +2,8 @@
 use chrono::{Datelike, offset};
 use leptos::*;
 use chrono::Days as Day;
-// use crate::time_grid;
+
+use crate::time_grid;
 
 
 #[component]
@@ -11,13 +12,13 @@ pub fn Days(numbers_from_sun: ReadSignal<Vec<u32>>) -> impl IntoView {
             <div class={"days"}>
                     <div class={"filler"}></div>
                     <div class={"filler"}></div>
-                    <div class={"day"}> Sun { move || numbers_from_sun()[0] } </div>
-                    <div class={"day"}> Mon { move || numbers_from_sun()[1] } </div>
-                    <div class={"day"}> Tue { move || numbers_from_sun()[2] } </div>
-                    <div class={"day"}> Wed { move || numbers_from_sun()[3] } </div>
-                    <div class={"day"}> Thu { move || numbers_from_sun()[4] } </div>
-                    <div class={"day"}> Fri { move || numbers_from_sun()[5] } </div>
-                    <div class={"day"}> Sat { move || numbers_from_sun()[6] } </div>
+                    <div class={"day"}> "Sun "{ move || numbers_from_sun()[0] } </div>
+                    <div class={"day"}> "Mon "{ move || numbers_from_sun()[1] } </div>
+                    <div class={"day"}> "Tue "{ move || numbers_from_sun()[2] } </div>
+                    <div class={"day"}> "Wed "{ move || numbers_from_sun()[3] } </div>
+                    <div class={"day"}> "Thu "{ move || numbers_from_sun()[4] } </div>
+                    <div class={"day"}> "Fri "{ move || numbers_from_sun()[5] } </div>
+                    <div class={"day"}> "Sat "{ move || numbers_from_sun()[6] } </div>
                 </div>
     }
 }
@@ -28,12 +29,11 @@ pub fn Calendar() -> impl IntoView {
     let (weekOffset, set_weekOffset) = create_signal(0);
     let reverseOffset = move || weekOffset() >= 0;
     let offset = move || weekOffset();
-    //let date = chrono::offset::Local::now();
 
-    // // let (select_mode, set_select_mode) = create_signal(time_grid::Mode::Single);
-    // // let (select_color, set_select_color) = create_signal(time_grid::HighlightColor::Green);
+    let (select_mode, set_select_mode) = create_signal(time_grid::Mode::Single);
+    let (select_color, set_select_color) = create_signal(time_grid::HighlightColor::Green);
     let (numbers_from_sun, set_nums_from_sun) = create_signal(vec![0;7]);
-    let test = move || {
+    let title = move || {
         let date = if reverseOffset() {
             chrono::offset::Local::now().checked_add_days(Day::new(((offset()*7)).try_into().unwrap())).expect("Should not be outside of date range")
         } else {
@@ -53,12 +53,11 @@ pub fn Calendar() -> impl IntoView {
             });
             currentDay = currentDay.checked_add_days(Day::new(1)).expect("Should not be outside of date range");
         };
-        let title = if firstDay.month() == lastDay.month() {
+        if firstDay.month() == lastDay.month() {
             format!("{} Sun {} - Sat {}, {}",firstDay.format("%B"),numbers_from_sun.get_untracked()[0],numbers_from_sun.get_untracked()[6],firstDay.format("%Y"))
         } else {
             format!("{} Sun {}, {} - {} Sat {}, {}",firstDay.format("%b"),numbers_from_sun.get_untracked()[0],firstDay.format("%Y"),lastDay.format("%b"),numbers_from_sun.get_untracked()[6],lastDay.format("%Y"))
-        };
-        title
+        }
     };
     
 
@@ -68,20 +67,20 @@ pub fn Calendar() -> impl IntoView {
         <div class="container">
             <div class="titlebar">
             <button class="direction" key="left" on:click=move |_| { set_weekOffset.update(|n| *n-=1); }>"<"</button>
-            <div id="title"> { test } </div>
+            <div id="title"> { title } </div>
             <button class="direction" key="right" on:click=move |_| { set_weekOffset.update(|n| *n+=1); }>">"</button>
             </div>
            <Days numbers_from_sun/>
-           <br/>
-           // <time_grid::TimeGrid select_mode select_color/>
-           { weekOffset }
-           <br/>
-           { reverseOffset }
-           <br/>
-           { offset }
-           <br/>
-           { numbers_from_sun }
-           <br/>
+        //    <br/>
+           <time_grid::TimeGrid select_mode select_color/>
+        //    { weekOffset }
+        //    <br/>
+        //    { reverseOffset }
+        //    <br/>
+        //    { offset }
+        //    <br/>
+        //    { numbers_from_sun }
+        //    <br/>
         </div>
         //<p> {  date.weekday().num_days_from_sunday() } </p>
         //<p> { date.date_naive().weekday().to_string() } </p>
