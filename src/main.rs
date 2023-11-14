@@ -1,61 +1,69 @@
-#![allow(non_snake_case)]
+#[cfg(feature = "ssr")]
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    use actix_files::Files;
+    use actix_web::*;
+    use leptos::*;
+    use leptos_actix::{generate_route_list, LeptosRoutes};
+    use team_availibility_coordinator::app::*;
 
-mod calendar;
+    let conf = get_configuration(None).await.unwrap();
+    let addr = conf.leptos_options.site_addr;
+    // Generate the list of routes in your Leptos App
+    let routes = generate_route_list(App);
+    println!("listening on http://{}", &addr);
 
-use yew::prelude::*;
-use calendar::Calendar;
+    HttpServer::new(move || {
+        let leptos_options = &conf.leptos_options;
+        let site_root = &leptos_options.site_root;
 
-#[derive(Properties, PartialEq)]
-struct SelectMenuProps {
-    id: String,
-    options: Vec<String>,
+        App::new()
+            .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
+            // serve JS/WASM/CSS from `pkg`
+            .service(Files::new("/pkg", format!("{site_root}/pkg")))
+            // serve other assets from the `assets` directory
+            .service(Files::new("/assets", site_root))
+            // serve the favicon from /favicon.ico
+            .service(favicon)
+            .leptos_routes(leptos_options.to_owned(), routes.to_owned(), App)
+            .app_data(web::Data::new(leptos_options.to_owned()))
+        //.wrap(middleware::Compress::default())
+    })
+    .bind(&addr)?
+    .run()
+    .await
 }
 
-#[function_component]
-fn SelectMenu(SelectMenuProps { id, options}: &SelectMenuProps ) -> Html {
-    html! {
-        <select id={id.clone()}>
-        {
-            options.into_iter().map(|name| {
-                html!{ 
-                    <option>
-                        {name}
-                    </option>
-                }
-            }).collect::<Html>()
-        }
-        </select>
-}
+#[cfg(feature = "ssr")]
+#[actix_web::get("favicon.ico")]
+async fn favicon(
+    leptos_options: actix_web::web::Data<leptos::LeptosOptions>,
+) -> actix_web::Result<actix_files::NamedFile> {
+    let leptos_options = leptos_options.into_inner();
+    let site_root = &leptos_options.site_root;
+    Ok(actix_files::NamedFile::open(format!(
+        "{site_root}/favicon.ico"
+    ))?)
 }
 
-#[function_component]
-fn App() -> Html {
-    let offset = use_state(|| 0);
-    let on_click = {
-        let offset = offset.clone();
-        move | newOffset: i32| {
-            offset.set(newOffset);
-        }
-    };
-    let players: Vec<String> = vec!["Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"].into_iter().map(String::from).collect();
-    let modes: Vec<String> = vec!["Single", "Area"].into_iter().map(String::from).collect();
-    let colors: Vec<String> = vec!["Green", "Yellow","Red" ].into_iter().map(String::from).collect();
-
-    html! {
-        <body>
-            <h1 class={classes!("center")}> { "Team Availablity Coordinator" }</h1>
-
-            <div class={classes!("select-container")}>
-                <SelectMenu id="playerName" options={players} />
-                <SelectMenu id="playerName" options={modes} />
-                <SelectMenu id="playerName" options={colors} />
-            </div>
-            <Calendar weekOffset={*offset} {on_click}/>
-            <p>{ *offset }</p>
-        </body>
-    }
+#[cfg(not(any(feature = "ssr", feature = "csr")))]
+pub fn main() {
+    // no client-side main function
+    // unless we want this to work with e.g., Trunk for pure client-side testing
+    // see lib.rs for hydration function instead
+    // see optional feature `csr` instead
 }
 
-fn main() {
-    yew::Renderer::<App>::new().render();
+#[cfg(all(not(feature = "ssr"), feature = "csr"))]
+pub fn main() {
+    // a client-side main function is required for using `trunk serve`
+    // prefer using `cargo leptos serve` instead
+    // to run: `trunk serve --open --features csr`
+    use leptos::*;
+    use team_availibility_coordinator::app::*;
+    use wasm_bindgen::prelude::wasm_bindgen;
+
+    console_error_panic_hook::set_once();
+
+    leptos::mount_to_body(App);
 }
