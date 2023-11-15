@@ -24,14 +24,14 @@ pub fn Days(numbers_from_sun: ReadSignal<Vec<u32>>) -> impl IntoView {
 }
 
 #[component]
-pub fn Calendar() -> impl IntoView {
+pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>) -> impl IntoView {
     // Get the date reference
     let (weekOffset, set_weekOffset) = create_signal(0);
     let reverseOffset = move || weekOffset() >= 0;
     let offset = move || weekOffset();
 
     let (select_mode, set_select_mode) = create_signal(time_grid::Mode::Single);
-    let (select_color, set_select_color) = create_signal(time_grid::HighlightColor::Green);
+    //let (select_color, set_select_color) = create_signal(time_grid::HighlightColor::Green);
     let (numbers_from_sun, set_nums_from_sun) = create_signal(vec![0;7]);
     let title = move || {
         let date = if reverseOffset() {
@@ -68,11 +68,12 @@ pub fn Calendar() -> impl IntoView {
             <div class="titlebar">
             <button class="direction" key="left" on:click=move |_| { set_weekOffset.update(|n| *n-=1); }>"<"</button>
             <div id="title"> { title } </div>
-            <button class="direction" key="right" on:click=move |_| { set_weekOffset.update(|n| *n+=1); }>">"</button>
+            // <button class="direction" key="right" on:click=move |_| { set_weekOffset.update(|n| *n+=1); }>">"</button>
+           // <button class="direction" key="right" on:click=move |_| { set_select_color.update(|n| *n=time_grid::HighlightColor::Red); }>">"</button>
             </div>
            <Days numbers_from_sun/>
         //    <br/>
-           <time_grid::TimeGrid select_mode select_color/>
+           <time_grid::TimeGrid select_mode select_color=color/>
         //    { weekOffset }
         //    <br/>
         //    { reverseOffset }
