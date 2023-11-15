@@ -68,7 +68,7 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>) -> impl IntoView {
             <div class="titlebar">
             <button class="direction" key="left" on:click=move |_| { set_weekOffset.update(|n| *n-=1); }>"<"</button>
             <div id="title"> { title } </div>
-            // <button class="direction" key="right" on:click=move |_| { set_weekOffset.update(|n| *n+=1); }>">"</button>
+            <button class="direction" key="right" on:click=move |_| { set_weekOffset.update(|n| *n+=1); }>">"</button>
            // <button class="direction" key="right" on:click=move |_| { set_select_color.update(|n| *n=time_grid::HighlightColor::Red); }>">"</button>
             </div>
            <Days numbers_from_sun/>
