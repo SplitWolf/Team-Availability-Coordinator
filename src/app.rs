@@ -69,7 +69,7 @@ fn HomePage() -> impl IntoView {
     let players: Vec<&str> = vec!["Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"];
     let modes: Vec<&str> = vec!["Single", "Area"];
     let colors: Vec<&str> = vec!["Green", "Yellow","Red" ];
-    let (selected_color,set_selected_color) = create_signal(HighlightColor::Red);
+    let (selected_color,set_selected_color) = create_signal(HighlightColor::Green);
 
     view! {
         <h1 class="center"> "Team Availablity Coordinator" </h1>
