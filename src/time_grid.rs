@@ -17,28 +17,44 @@ pub enum HighlightColor {
 impl fmt::Display for HighlightColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            HighlightColor::Red => write!(f, "red"),
-            HighlightColor::Yellow => write!(f, "yellow"),
-            HighlightColor::Green => write!(f, "green"),
+            HighlightColor::Red => write!(f, "box highlight-red"),
+            HighlightColor::Yellow => write!(f, "box highlight-yellow"),
+            HighlightColor::Green => write!(f, "box highlight-green"),
             HighlightColor::None => write!(f, "")
         }
     }
+}
+#[derive(Clone)]
+struct BoxDiv {
+    id: u32,
+    color: RwSignal<HighlightColor>,
+    weekend: bool
 }
 
 #[component]
 pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<HighlightColor>) -> impl IntoView {
     let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
-    let highlightStateRed: Vec<u32> = vec![];
-    let highlightStateYellow: Vec<u32> = vec![];
-    let highlightStateGreen: Vec<u32> = vec![];
+    let (box_divs, set_box_divs) = create_signal(vec![BoxDiv{id: 0, color: create_rw_signal(HighlightColor::None),weekend: false};0]);
     let (select_current,set_select_current) = create_signal(0);
-    let select_mode = select_mode.get();
-    let color = select_color.get();
     let toAdd = 0;
 
-    let test = move |_| {
-        set_select_current.update(|n| *n = 1);
-    };
+    for i in 0..231 {
+        if i % 7 == 0 || i % 7 == 6 {
+            set_box_divs.update(|vec| {
+                vec.push(BoxDiv {
+                    id: i,
+                    color: create_rw_signal(HighlightColor::None),
+                    weekend: true
+                })});
+        } else {
+            set_box_divs.update(|vec| {
+                vec.push(BoxDiv {
+                    id: i,
+                    color: create_rw_signal(HighlightColor::None),
+                    weekend: false
+                })});
+        }
+    }
 
     view! {
         <div class="content">
@@ -46,44 +62,44 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
                 .enumerate()
                 .map(| (index, time) | {
                 view! {
-                        <div class="time" style={"grid-row:".to_owned() + &(index*2+(if index !=0 {1} else {0})).to_string()} on:click=test>{ format!("{}:00", time) }</div>
+                        <div class="time" style={"grid-row:".to_owned() + &(index*2+(if index !=0 {1} else {0})).to_string()}>{ format!("{}:00", time) }</div>
                         <div class="time" style={"grid-row:".to_owned() + &((index+1)*2).to_string()}>{ format!("{}:30", time)}</div>
                 }}).collect_view()
             }
             <div class="filler-box"></div>
             <div class="filler-col"></div>
-            {
-                let n: Vec<u32> = (0..231).collect();
-                n.into_iter()
-                    .map(| i | {
-                        if highlightStateRed.contains(&i) {
-                            colorBoxDiv(HighlightColor::Red, i % 7 == 0 || i % 7 == 6, i)
-                        } else if highlightStateYellow.contains(&i) {
-                            colorBoxDiv(HighlightColor::Yellow, i % 7 == 0 || i % 7 == 6, i)
-                        } else if highlightStateGreen.contains(&i) {
-                            colorBoxDiv(HighlightColor::Green, i % 7 == 0 || i % 7 == 6, i)
-                        } else {
-                            colorBoxDiv(HighlightColor::None, i % 7 == 0 || i % 7 == 6, i)
-                        }
-                    }).collect_view()
+            <For
+                each=box_divs
+                key= |state| state.id.clone()
+                let:child
+            >
+            <div 
+            class="box" 
+            class:weekend={ move || child.weekend}
+            class:highlight-red={move || child.color.get() == HighlightColor::Red} 
+            class:highlight-yellow={move || child.color.get() == HighlightColor::Yellow} 
+            class:highlight-green={move || child.color.get() == HighlightColor::Green} 
+            on:click=move |_| {
+                box_divs.with(|boxes| {
+                    if (move || select_mode() == Mode::Single)() {
+                        boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
+                            div.color.update(|color| {
+                                *color = select_color();
+                            });
+                        });
+                    } else if (move || select_mode() == Mode::Area)() {
+                    } else {
+
+                    }
+
+                })
             }
+            id={child.id.to_string()} 
+            />
+            </For>
         </div>
     }
 }
-#[allow(non_snake_case)]
-fn colorBoxDiv(color: HighlightColor, weekend: bool, id: u32) -> impl IntoView {
-    return if weekend {
-        view! {
-            // on:click=move |_| { highlightArray.update(|n| n.push(id)); }
-            <div class=format!("box weekend highlight-{}",color) id={id.to_string()} />
-        }
-    } else {
-        view! {
-            <div class=format!("box highlight-{}",color) id={id.to_string()}/>
-        }
-    }
-}
-
 //Modify Code
 
 // for n in 0..231 {
