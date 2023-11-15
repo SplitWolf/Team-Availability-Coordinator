@@ -2,6 +2,8 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+use crate::time_grid::HighlightColor;
+
 #[component]
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
@@ -27,14 +29,28 @@ pub fn App() -> impl IntoView {
     }
 }
 
+// Todo Change Singal to callback
 #[component]
-fn SelectMenu(id: &'static str, options: Vec<&'static str>) -> impl IntoView {
+fn SelectMenu(
+    id: &'static str, 
+    options: Vec<&'static str>, 
+    #[prop(default=create_signal(HighlightColor::Red).1)]
+    on_change: WriteSignal<HighlightColor>
+) -> impl IntoView {
     view! {
-        <select id={id}>
+        <select id={id} on:change=move |ev| {
+            logging::log!("test {}",event_target_value(&ev));
+            match event_target_value(&ev).as_str() {
+                "Red" => on_change.update(|color| *color = HighlightColor::Red),
+                "Yellow" => on_change.update(|color| *color = HighlightColor::Yellow),
+                "Green" => on_change.update(|color| *color = HighlightColor::Green),
+                _ => ()
+            };
+        }>
         {
             options.into_iter().map(|name| {
                 view! {
-                    <option>
+                    <option value={name}>
                        { name }
                     </option>
                 }
@@ -53,16 +69,16 @@ fn HomePage() -> impl IntoView {
     let players: Vec<&str> = vec!["Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"];
     let modes: Vec<&str> = vec!["Single", "Area"];
     let colors: Vec<&str> = vec!["Green", "Yellow","Red" ];
-    let (selected_color,set_selected_color) = create_signal(0);
+    let (selected_color,set_selected_color) = create_signal(HighlightColor::Red);
 
     view! {
         <h1 class="center"> "Team Availablity Coordinator" </h1>
         <div class="select-container">
             <SelectMenu id=id options=players />
             <SelectMenu id=id options=modes />
-            <SelectMenu id=id options=colors />
+            <SelectMenu id=id options=colors on_change=set_selected_color />
             </div>
-        <crate::calendar::Calendar />
+        <crate::calendar::Calendar color=selected_color/>
     }
 }
 
