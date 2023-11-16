@@ -1,8 +1,8 @@
-use leptos::*;
+use leptos::{*, ev::Event};
 use leptos_meta::*;
 use leptos_router::*;
 
-use crate::time_grid::HighlightColor;
+use crate::time_grid::{HighlightColor, Mode};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -15,7 +15,7 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/team_avalibity_coordinator.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title text="Team Availablity Coordinator"/>
 
         // content for this welcome page
         <Router>
@@ -34,19 +34,11 @@ pub fn App() -> impl IntoView {
 fn SelectMenu(
     id: &'static str, 
     options: Vec<&'static str>, 
-    #[prop(default=create_signal(HighlightColor::Red).1)]
-    on_change: WriteSignal<HighlightColor>
+    #[prop(into)] 
+    on_change: Callback<Event>
 ) -> impl IntoView {
     view! {
-        <select id={id} on:change=move |ev| {
-            logging::log!("test {}",event_target_value(&ev));
-            match event_target_value(&ev).as_str() {
-                "Red" => on_change.update(|color| *color = HighlightColor::Red),
-                "Yellow" => on_change.update(|color| *color = HighlightColor::Yellow),
-                "Green" => on_change.update(|color| *color = HighlightColor::Green),
-                _ => ()
-            };
-        }>
+        <select id={id} on:change=on_change>
         {
             options.into_iter().map(|name| {
                 view! {
@@ -58,7 +50,7 @@ fn SelectMenu(
             }).collect_view()
         }
         </select>
-}
+    }
 }
 
 /// Renders the home page of your application.
@@ -67,18 +59,34 @@ fn HomePage() -> impl IntoView {
     // Creates a reactive value to update the button
     let id = "playerName";
     let players: Vec<&str> = vec!["Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"];
-    let modes: Vec<&str> = vec!["Single", "Area"];
+    let modes: Vec<&str> = vec!["Single", "Area Select", "Area Deselect"];
     let colors: Vec<&str> = vec!["Green", "Yellow","Red" ];
     let (selected_color,set_selected_color) = create_signal(HighlightColor::Green);
+    let (select_mode, set_select_mode) = create_signal(Mode::Single);
 
     view! {
         <h1 class="center"> "Team Availablity Coordinator" </h1>
         <div class="select-container">
-            <SelectMenu id=id options=players />
-            <SelectMenu id=id options=modes />
-            <SelectMenu id=id options=colors on_change=set_selected_color />
+            <SelectMenu id=id options=players on_change=move |_| {} />
+            <SelectMenu id=id options=modes on_change=move |ev| {
+                match event_target_value(&ev).as_str() {
+                  "Single" => set_select_mode.update(|mode| *mode=Mode::Single),
+                  "Area Select" =>  set_select_mode.update(|mode| *mode=Mode::AreaSelect),
+                  "Area Deselect" =>  set_select_mode.update(|mode| *mode=Mode::AreaDeselect),
+                  _ => ()
+                };
+            }/>
+            <SelectMenu id=id options=colors on_change=move |ev| {
+                logging::log!("test {}",event_target_value(&ev));
+                match event_target_value(&ev).as_str() {
+                    "Red" => set_selected_color.update(|color| *color = HighlightColor::Red),
+                    "Yellow" => set_selected_color.update(|color| *color = HighlightColor::Yellow),
+                    "Green" => set_selected_color.update(|color| *color = HighlightColor::Green),
+                    _ => ()
+                };
+            } />
             </div>
-        <crate::calendar::Calendar color=selected_color/>
+        <crate::calendar::Calendar color=selected_color mode=select_mode/>
     }
 }
 
