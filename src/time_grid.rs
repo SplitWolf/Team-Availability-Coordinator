@@ -5,7 +5,8 @@ use std::cmp;
 #[derive(PartialEq,Clone, Copy)]
 pub enum Mode  {
     Single,
-    Area
+    AreaSelect,
+    AreaDeselect
 }
 #[derive(PartialEq, Clone)]
 pub enum HighlightColor {
@@ -36,7 +37,6 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
     let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
     let (box_divs, set_box_divs) = create_signal(vec![BoxDiv{id: 0, color: create_rw_signal(HighlightColor::None),weekend: false};0]);
     let (select_current,set_select_current) = create_signal(0);
-    let toAdd = 0;
 
     for i in 0..231 {
         if i % 7 == 0 || i % 7 == 6 {
@@ -81,15 +81,78 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
             class:highlight-green={move || child.color.get() == HighlightColor::Green} 
             on:click=move |_| {
                 box_divs.with(|boxes| {
-                    if (move || select_mode() == Mode::Single)() {
-                        boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
-                            div.color.update(|color| {
-                                *color = select_color();
+                    match (move || select_mode())() {
+                        Mode::Single => {
+                            boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
+                                div.color.update(|color| {
+                                    if *color == HighlightColor::None {
+                                        *color = select_color();
+                                    } else {
+                                        *color = HighlightColor::None;
+                                    }
+                                });
                             });
-                        });
-                    } else if (move || select_mode() == Mode::Area)() {
-                    } else {
-
+                        },
+                        Mode::AreaSelect => {
+                            if (move || select_current() == 0)() {
+                                boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
+                                    div.color.update(|color| {
+                                        if *color == HighlightColor::None {
+                                            *color = select_color();
+                                        } else {
+                                            *color = HighlightColor::None;
+                                        }
+                                    });
+                                });
+                                set_select_current.update(|value| {
+                                    *value = child.id+1;
+                                });
+                            } else {
+                                // Replace with create_effect?
+                                let row_begin =move || cmp::min(child.id/7,(select_current()-1)/7);
+                                let row_end =move ||  cmp::max(child.id/7,(select_current()-1)/7);
+                                let col_begin =move ||  cmp::min(child.id%7,(select_current()-1)%7); 
+                                let col_end =move ||  cmp::max(child.id%7,(select_current()-1)%7);
+                                boxes.into_iter().filter(|box_div| 
+                                    row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
+                                    && col_begin() <= box_div.id%7 && box_div.id%7 <= col_end() ).for_each(|div| {
+                                    div.color.update(|color| {
+                                        *color = select_color();
+                                    });
+                                });
+                                set_select_current.update(|value| {
+                                    *value = 0;
+                                });
+                            }
+                        },
+                        Mode::AreaDeselect => {
+                            if (move || select_current() == 0)() {
+                                boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
+                                    div.color.update(|color| {
+                                        *color = select_color()
+                                    });
+                                });
+                                set_select_current.update(|value| {
+                                    *value = child.id+1;
+                                });
+                            } else {
+                                // Replace with create_effect?
+                                let row_begin =move || cmp::min(child.id/7,(select_current()-1)/7);
+                                let row_end =move ||  cmp::max(child.id/7,(select_current()-1)/7);
+                                let col_begin =move ||  cmp::min(child.id%7,(select_current()-1)%7); 
+                                let col_end =move ||  cmp::max(child.id%7,(select_current()-1)%7);
+                                boxes.into_iter().filter(|box_div| 
+                                    row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
+                                    && col_begin() <= box_div.id%7 && box_div.id%7 <= col_end() ).for_each(|div| {
+                                    div.color.update(|color| {
+                                        *color = HighlightColor::None;
+                                    });
+                                });
+                                set_select_current.update(|value| {
+                                    *value = 0;
+                                });
+                            }
+                        }
                     }
 
                 })
