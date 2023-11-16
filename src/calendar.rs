@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use chrono::{Datelike, offset};
+use chrono::Datelike;
 use leptos::*;
 use chrono::Days as Day;
 
@@ -24,13 +24,13 @@ pub fn Days(numbers_from_sun: ReadSignal<Vec<u32>>) -> impl IntoView {
 }
 
 #[component]
-pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>) -> impl IntoView {
+pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<time_grid::Mode>) -> impl IntoView {
     // Get the date reference
     let (weekOffset, set_weekOffset) = create_signal(0);
     let reverseOffset = move || weekOffset() >= 0;
     let offset = move || weekOffset();
 
-    let (select_mode, set_select_mode) = create_signal(time_grid::Mode::Single);
+    // let (select_mode, set_select_mode) = create_signal(time_grid::Mode::Area);
     //let (select_color, set_select_color) = create_signal(time_grid::HighlightColor::Green);
     let (numbers_from_sun, set_nums_from_sun) = create_signal(vec![0;7]);
     let title = move || {
@@ -73,7 +73,7 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>) -> impl IntoView {
             </div>
            <Days numbers_from_sun/>
         //    <br/>
-           <time_grid::TimeGrid select_mode select_color=color/>
+           <time_grid::TimeGrid select_mode=mode select_color=color/>
         //    { weekOffset }
         //    <br/>
         //    { reverseOffset }
