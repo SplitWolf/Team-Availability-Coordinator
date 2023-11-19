@@ -24,7 +24,7 @@ pub fn Days(numbers_from_sun: ReadSignal<Vec<u32>>) -> impl IntoView {
 }
 
 #[component]
-pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<time_grid::Mode>) -> impl IntoView {
+pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<time_grid::SelectionMode>) -> impl IntoView {
     // Get the date reference
     let (weekOffset, set_weekOffset) = create_signal(0);
     let reverseOffset = move || weekOffset() >= 0;

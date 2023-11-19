@@ -2,7 +2,7 @@ use leptos::{*, ev::Event};
 use leptos_meta::*;
 use leptos_router::*;
 
-use crate::time_grid::{HighlightColor, Mode};
+use crate::time_grid::{HighlightColor, SelectionMode};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -62,7 +62,7 @@ fn HomePage() -> impl IntoView {
     let modes: Vec<&str> = vec!["Single", "Area Select", "Area Deselect"];
     let colors: Vec<&str> = vec!["Green", "Yellow","Red" ];
     let (selected_color,set_selected_color) = create_signal(HighlightColor::Green);
-    let (select_mode, set_select_mode) = create_signal(Mode::Single);
+    let (select_mode, set_select_mode) = create_signal(SelectionMode::Single);
 
     view! {
         <h1 class="center"> "Team Availablity Coordinator" </h1>
@@ -70,9 +70,9 @@ fn HomePage() -> impl IntoView {
             <SelectMenu id=id options=players on_change=move |_| {} />
             <SelectMenu id=id options=modes on_change=move |ev| {
                 match event_target_value(&ev).as_str() {
-                  "Single" => set_select_mode.update(|mode| *mode=Mode::Single),
-                  "Area Select" =>  set_select_mode.update(|mode| *mode=Mode::AreaSelect),
-                  "Area Deselect" =>  set_select_mode.update(|mode| *mode=Mode::AreaDeselect),
+                  "Single" => set_select_mode.update(|mode| *mode=SelectionMode::Single),
+                  "Area Select" =>  set_select_mode.update(|mode| *mode=SelectionMode::AreaSelect),
+                  "Area Deselect" =>  set_select_mode.update(|mode| *mode=SelectionMode::AreaDeselect),
                   _ => ()
                 };
             }/>

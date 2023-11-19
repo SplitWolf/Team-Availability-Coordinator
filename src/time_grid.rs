@@ -1,9 +1,10 @@
+use chrono::NaiveTime;
 use leptos::*;
 use std::fmt;
 use std::cmp;
 
 #[derive(PartialEq,Clone, Copy)]
-pub enum Mode  {
+pub enum SelectionMode  {
     Single,
     AreaSelect,
     AreaDeselect
@@ -26,34 +27,38 @@ impl fmt::Display for HighlightColor {
     }
 }
 #[derive(Clone)]
-struct BoxDiv {
+struct TimeSlot {
     id: u32,
+    start_time: NaiveTime,
+    end_time: NaiveTime,
     color: RwSignal<HighlightColor>,
     weekend: bool
 }
 
 #[component]
-pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<HighlightColor>) -> impl IntoView {
+pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal<HighlightColor>) -> impl IntoView {
     let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
-    let (box_divs, set_box_divs) = create_signal(vec![BoxDiv{id: 0, color: create_rw_signal(HighlightColor::None),weekend: false};0]);
+    let (box_divs, set_box_divs) = create_signal(
+        vec![TimeSlot{
+            id: 0, 
+            start_time: NaiveTime::from_hms_opt(0,0,0).unwrap(),
+            end_time: NaiveTime::from_hms_opt(0,0,0).unwrap(), 
+            color: create_rw_signal(HighlightColor::None),
+            weekend: false
+        };0]);
     let (select_current,set_select_current) = create_signal(0);
+//i/7,if (i/7)%2==0 { 0} else { 30 }
+//i/7,if (i/7)%2==0 { 0 } else { 30 }
 
     for i in 0..231 {
-        if i % 7 == 0 || i % 7 == 6 {
-            set_box_divs.update(|vec| {
-                vec.push(BoxDiv {
-                    id: i,
-                    color: create_rw_signal(HighlightColor::None),
-                    weekend: true
-                })});
-        } else {
-            set_box_divs.update(|vec| {
-                vec.push(BoxDiv {
-                    id: i,
-                    color: create_rw_signal(HighlightColor::None),
-                    weekend: false
-                })});
-        }
+        set_box_divs.update(|vec| {
+            vec.push(TimeSlot {
+                id: i,
+                start_time: NaiveTime::from_hms_opt(0,0,0).expect("HARDCODED"),
+                end_time: NaiveTime::from_hms_opt(0,if (i/7)%2==0 { 0 } else { 30 },0).expect("HARDCODED 2"),
+                color: create_rw_signal(HighlightColor::None),
+                weekend: i % 7 == 0 || i % 7 == 6
+            })});
     }
 
     view! {
@@ -82,7 +87,7 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
             on:click=move |_| {
                 box_divs.with(|boxes| {
                     match (move || select_mode())() {
-                        Mode::Single => {
+                        SelectionMode::Single => {
                             boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
                                 div.color.update(|color| {
                                     if *color == HighlightColor::None {
@@ -93,7 +98,7 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
                                 });
                             });
                         },
-                        Mode::AreaSelect => {
+                        SelectionMode::AreaSelect => {
                             if (move || select_current() == 0)() {
                                 boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
                                     div.color.update(|color| {
@@ -125,7 +130,7 @@ pub fn TimeGrid(select_mode: ReadSignal<Mode>, select_color: ReadSignal<Highligh
                                 });
                             }
                         },
-                        Mode::AreaDeselect => {
+                        SelectionMode::AreaDeselect => {
                             if (move || select_current() == 0)() {
                                 boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
                                     div.color.update(|color| {
