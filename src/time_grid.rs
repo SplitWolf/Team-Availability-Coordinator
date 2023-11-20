@@ -47,15 +47,15 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
             weekend: false
         };0]);
     let (select_current,set_select_current) = create_signal(0);
-//i/7,if (i/7)%2==0 { 0} else { 30 }
-//i/7,if (i/7)%2==0 { 0 } else { 30 }
+    let time_calc = vec!["06","07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
 
     for i in 0..231 {
+        let index = if i >= 7 {((i+7)/7)/2} else {0} as usize;
         set_box_divs.update(|vec| {
             vec.push(TimeSlot {
                 id: i,
-                start_time: NaiveTime::from_hms_opt(0,0,0).expect("HARDCODED"),
-                end_time: NaiveTime::from_hms_opt(0,if (i/7)%2==0 { 0 } else { 30 },0).expect("HARDCODED 2"),
+                start_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED"),
+                end_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED 2"),
                 color: create_rw_signal(HighlightColor::None),
                 weekend: i % 7 == 0 || i % 7 == 6
             })});
@@ -89,6 +89,7 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
                     match (move || select_mode())() {
                         SelectionMode::Single => {
                             boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
+                                logging::log!("{}",div.start_time);
                                 div.color.update(|color| {
                                     if *color == HighlightColor::None {
                                         *color = select_color();
@@ -166,6 +167,9 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
             />
             </For>
         </div>
+        <button>
+            "Testing 123"
+        </button>
     }
 }
 //Modify Code
