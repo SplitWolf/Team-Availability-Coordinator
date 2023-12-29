@@ -1,3 +1,5 @@
+use chrono::DateTime;
+use chrono::Local;
 use chrono::NaiveTime;
 use leptos::*;
 use std::fmt;
@@ -9,7 +11,7 @@ pub enum SelectionMode  {
     AreaSelect,
     AreaDeselect
 }
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum HighlightColor {
     Red,
     Green,
@@ -19,9 +21,9 @@ pub enum HighlightColor {
 impl fmt::Display for HighlightColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            HighlightColor::Red => write!(f, "box highlight-red"),
-            HighlightColor::Yellow => write!(f, "box highlight-yellow"),
-            HighlightColor::Green => write!(f, "box highlight-green"),
+            HighlightColor::Red => write!(f, "highlight-red"),
+            HighlightColor::Yellow => write!(f, "highlight-yellow"),
+            HighlightColor::Green => write!(f, "highlight-green"),
             HighlightColor::None => write!(f, "")
         }
     }
@@ -31,36 +33,73 @@ struct TimeSlot {
     id: u32,
     start_time: NaiveTime,
     end_time: NaiveTime,
+    dayColors: Vec<DayColor>,
     color: RwSignal<HighlightColor>,
     weekend: bool
 }
 
+#[derive(Clone)]
+struct DayColor {
+    date: DateTime<Local>,
+    color: HighlightColor
+}
+
 #[component]
-pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal<HighlightColor>) -> impl IntoView {
+pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal<HighlightColor>, curr_date: Signal<DateTime<Local>>) -> impl IntoView {
     let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
-    let (box_divs, set_box_divs) = create_signal(
-        vec![TimeSlot{
-            id: 0, 
-            start_time: NaiveTime::from_hms_opt(0,0,0).unwrap(),
-            end_time: NaiveTime::from_hms_opt(0,0,0).unwrap(), 
-            color: create_rw_signal(HighlightColor::None),
-            weekend: false
-        };0]);
+    let (timeslots, set_timeslots) = create_signal(vec![]);
     let (select_current,set_select_current) = create_signal(0);
     let time_calc = vec!["06","07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
 
-    for i in 0..231 {
+    for i in 0..=230 {
         let index = if i >= 7 {((i+7)/7)/2} else {0} as usize;
-        set_box_divs.update(|vec| {
+        set_timeslots.update(|vec| {
             vec.push(TimeSlot {
                 id: i,
-                start_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED"),
-                end_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED 2"),
+                start_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED VALUE: Time Start"),
+                end_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED VALUE: Time End"),
+                dayColors: vec![],
                 color: create_rw_signal(HighlightColor::None),
                 weekend: i % 7 == 0 || i % 7 == 6
             })});
     }
 
+    let singleSelect = move |child_id: u32, set_color: HighlightColor| {
+        timeslots.with(|slots| {
+            slots.into_iter().filter(|box_div| box_div.id == child_id).for_each(|div| {
+                // logging::log!("{}",div.start_time);
+                div.color.update(move |color| {
+                    if *color != set_color {
+                        *color = set_color;
+                    } else {
+                        *color = HighlightColor::None;
+                    }
+                });
+            });
+        })
+    };
+    
+    let areaSelect = move |child_id: u32, set_color: HighlightColor| {
+        let row_begin =move || cmp::min(child_id/7,(select_current()-1)/7);
+        let row_end =move ||  cmp::max(child_id/7,(select_current()-1)/7);
+        let col_begin =move ||  cmp::min(child_id%7,(select_current()-1)%7); 
+        let col_end =move ||  cmp::max(child_id%7,(select_current()-1)%7);
+        timeslots.with(|slots| {
+            slots.into_iter().filter(|box_div| 
+                row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
+                && col_begin() <= box_div.id%7 && box_div.id%7 <= col_end() ).for_each(|div| {
+                div.color.update(|color| {
+                    *color = set_color;
+                });
+            });
+            set_select_current.update(|value| {
+                *value = 0;
+            });
+        })
+    };
+    
+    //TODO: Use box divs signal to create effect and store data when sumbit btn clicked
+    
     view! {
         <div class="content">
             { time.into_iter()
@@ -74,7 +113,7 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
             <div class="filler-box"></div>
             <div class="filler-col"></div>
             <For
-                each=box_divs
+                each=move || timeslots()
                 key= |state| state.id.clone()
                 let:child
             >
@@ -85,24 +124,17 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
             class:highlight-yellow={move || child.color.get() == HighlightColor::Yellow} 
             class:highlight-green={move || child.color.get() == HighlightColor::Green} 
             on:click=move |_| {
-                box_divs.with(|boxes| {
-                    match (move || select_mode())() {
-                        SelectionMode::Single => {
-                            boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
-                                logging::log!("{}",div.start_time);
-                                div.color.update(|color| {
-                                    if *color == HighlightColor::None {
-                                        *color = select_color();
-                                    } else {
-                                        *color = HighlightColor::None;
-                                    }
-                                });
-                            });
-                        },
-                        SelectionMode::AreaSelect => {
-                            if (move || select_current() == 0)() {
+                match (move || select_mode())() {
+                    SelectionMode::Single => {
+                        singleSelect(child.id,select_color());
+                    },
+                    SelectionMode::AreaSelect => {
+                        if (move || select_current() == 0)() {
+                            //TODO: Replace with custom highlight color single select
+                            timeslots.with(|boxes| { 
                                 boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
                                     div.color.update(|color| {
+                                        //TODO: Update how corner box is colored
                                         if *color == HighlightColor::None {
                                             *color = select_color();
                                         } else {
@@ -110,109 +142,39 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
                                         }
                                     });
                                 });
-                                set_select_current.update(|value| {
-                                    *value = child.id+1;
-                                });
-                            } else {
-                                // Replace with create_effect?
-                                let row_begin =move || cmp::min(child.id/7,(select_current()-1)/7);
-                                let row_end =move ||  cmp::max(child.id/7,(select_current()-1)/7);
-                                let col_begin =move ||  cmp::min(child.id%7,(select_current()-1)%7); 
-                                let col_end =move ||  cmp::max(child.id%7,(select_current()-1)%7);
-                                boxes.into_iter().filter(|box_div| 
-                                    row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
-                                    && col_begin() <= box_div.id%7 && box_div.id%7 <= col_end() ).for_each(|div| {
-                                    div.color.update(|color| {
-                                        *color = select_color();
-                                    });
-                                });
-                                set_select_current.update(|value| {
-                                    *value = 0;
-                                });
-                            }
-                        },
-                        SelectionMode::AreaDeselect => {
-                            if (move || select_current() == 0)() {
+                            });
+                            set_select_current.update(|value| {
+                                *value = child.id+1;
+                            });
+                        } else {
+                            areaSelect(child.id,select_color())
+                        }
+                    },
+                    SelectionMode::AreaDeselect => {
+                        if (move || select_current() == 0)() {
+                            //TODO: Replace with custom highlight color single select
+                            timeslots.with(|boxes| {
                                 boxes.into_iter().filter(|box_div| box_div.id == child.id).for_each(|div| {
                                     div.color.update(|color| {
                                         *color = select_color()
                                     });
                                 });
-                                set_select_current.update(|value| {
-                                    *value = child.id+1;
-                                });
-                            } else {
-                                // Replace with create_effect?
-                                let row_begin =move || cmp::min(child.id/7,(select_current()-1)/7);
-                                let row_end =move ||  cmp::max(child.id/7,(select_current()-1)/7);
-                                let col_begin =move ||  cmp::min(child.id%7,(select_current()-1)%7); 
-                                let col_end =move ||  cmp::max(child.id%7,(select_current()-1)%7);
-                                boxes.into_iter().filter(|box_div| 
-                                    row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
-                                    && col_begin() <= box_div.id%7 && box_div.id%7 <= col_end() ).for_each(|div| {
-                                    div.color.update(|color| {
-                                        *color = HighlightColor::None;
-                                    });
-                                });
-                                set_select_current.update(|value| {
-                                    *value = 0;
-                                });
-                            }
+                            });
+                            set_select_current.update(|value| {
+                                *value = child.id+1;
+                            });
+                        } else {
+                            areaSelect(child.id,HighlightColor::None)
                         }
                     }
-
-                })
+                }
             }
             id={child.id.to_string()} 
             />
             </For>
         </div>
         <button>
-            "Testing 123"
+            "Submit Data"
         </button>
     }
 }
-//Modify Code
-
-// for n in 0..231 {
-//     let mut colorVec = if color == HighlightColor::Red {
-//         highlightStateRed.clone()
-//     } else if color == HighlightColor::Yellow {
-//         highlightStateYellow.clone()
-//     } else if color == HighlightColor::Green {
-//         highlightStateGreen.clone()
-//     } else {
-//         highlightStateGreen.clone()
-//     };
-
-//     match select_mode {
-//         Mode::Area => {
-//             if select_current == 0 {
-//                 //TODO: Define state callback or smth
-//                 select_current = toAdd+1;
-//             } else {
-//                 //TODO: Make this a function and redo the alg
-//                 let selectRangeCol: u32 = (cmp::max(toAdd%7,(select_current-1)%7))-(cmp::min(toAdd%7,(select_current-1)%7));
-//                 let selectRangeRow: u32 = (cmp::max(toAdd/7,(select_current-1)/7))-(cmp::min(toAdd/7,(select_current-1)/7));
-//                 let mut toAddVec: Vec<u32> = vec![];
-//                 let mut finalToAdd: Vec<u32> = vec![];
-//                 let initBox = cmp::min(toAdd/7,(select_current-1)/7)*7+cmp::min(toAdd%7,(select_current-1)%7);
-//                 for n in 0..selectRangeCol+1 {
-//                     toAddVec.push(initBox+n);
-//                     for n in 0..selectRangeRow+1 {
-//                         toAddVec.iter().for_each(| value | {
-//                             finalToAdd.push(value+(7*n));
-//                         });
-//                     }
-//                 }
-//             }
-//         },
-//         Mode::Single => {
-//             if colorVec.contains(&toAdd) {
-//                 colorVec.remove(colorVec.iter().position(|&r| r == toAdd).unwrap());
-//             } else {
-//                 colorVec.push(toAdd);
-//             }
-//         }
-//     }
-// }
