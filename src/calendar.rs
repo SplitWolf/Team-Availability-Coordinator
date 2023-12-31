@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use chrono::Datelike;
+use chrono::{Datelike, Duration};
 use leptos::*;
 use chrono::Days as Day;
 
@@ -28,11 +28,7 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<t
     // Get the date reference
     // Temp Weekoffset signinal if
     let (weekOffset, set_weekOffset) = create_signal(0);
-    let date = Signal::derive(move || if weekOffset() >= 0 {
-        chrono::offset::Local::now().checked_add_days(Day::new(((weekOffset()*7)).try_into().unwrap())).expect("Should not be outside of date range")
-    } else {
-        chrono::offset::Local::now().checked_sub_days(Day::new(((-(weekOffset()*7))).try_into().unwrap())).expect("Should not be outside of date range")
-    });
+    let date = Signal::derive(move || chrono::offset::Local::now().checked_add_signed(Duration::days(weekOffset()*7)).unwrap());
     let numbers_from_sun = Signal::derive(move || {
         let mut nums = vec![0;7];
         let curr_date = date();
