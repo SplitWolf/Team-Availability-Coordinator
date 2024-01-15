@@ -58,7 +58,7 @@ fn SelectMenu(
 fn HomePage() -> impl IntoView {
     // Creates a reactive value to update the button
     let id = "playerName";
-    let players: Vec<&str> = vec!["Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"];
+    let players: Vec<&str> = vec!["Zero", "Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"];
     let modes: Vec<&str> = vec!["Single", "Area Select", "Area Deselect"];
     let colors: Vec<&str> = vec!["Green", "Yellow","Red" ];
     let (selected_color,set_selected_color) = create_signal(HighlightColor::Green);
@@ -77,7 +77,7 @@ fn HomePage() -> impl IntoView {
                 };
             }/>
             <SelectMenu id=id options=colors on_change=move |ev| {
-                logging::log!("test {}",event_target_value(&ev));
+               // logging::log!("test {}",event_target_value(&ev));
                 match event_target_value(&ev).as_str() {
                     "Red" => set_selected_color.update(|color| *color = HighlightColor::Red),
                     "Yellow" => set_selected_color.update(|color| *color = HighlightColor::Yellow),

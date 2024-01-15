@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
-use chrono::{Datelike, Duration};
+use std::collections::HashMap;
 use leptos::*;
-use chrono::Days as Day;
-
-use crate::time_grid;
-
+use chrono::{Datelike, Duration, Days as Day};
+// Submit Action Imports
+use crate::time_grid::{self, HighlightColor, TimeSlot, SendSlot};
+use crate::api::update_db;
 
 #[component]
 pub fn Days(numbers_from_sun: Signal<Vec<u32>>) -> impl IntoView {
@@ -56,6 +56,23 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<t
         }
     };    
 
+    let submit_action = create_action(move |input: &Vec<TimeSlot>| {
+
+        let toSend = input.clone().iter().map(move |data: &TimeSlot| {
+            SendSlot { 
+                id: data.id, 
+                _start_time: data._start_time.to_string(), 
+                _end_time: data._end_time.to_string(), 
+                day_colors: data.day_colors.get().iter().map(move |(date, color)|{
+                    (date.to_string(), *color)
+                }).collect::<HashMap<String,HighlightColor>>(), 
+                weekend: data.weekend
+            }
+        }).collect::<Vec<_>>();
+
+        update_db("Zero".to_string(),toSend)
+    });
+
 
     view! {
         
@@ -67,7 +84,7 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<t
             </div>
            <Days numbers_from_sun/>
         //    <br/>
-           <time_grid::TimeGrid select_mode=mode select_color=color curr_date=date/>
+           <time_grid::TimeGrid select_mode=mode select_color=color curr_date=date submit_action/>
         //    { weekOffset }
         //    <br/>
         //    { reverseOffset }

@@ -2,6 +2,8 @@ use std::{fmt, cmp};
 use std::collections::HashMap;
 use chrono::{ DateTime, Local, NaiveDate, NaiveTime, Duration, Datelike};
 use leptos::*;
+use serde::{Serialize, Deserialize};
+
 
 #[derive(PartialEq,Clone, Copy)]
 pub enum SelectionMode  {
@@ -9,7 +11,7 @@ pub enum SelectionMode  {
     AreaSelect,
     AreaDeselect
 }
-#[derive(PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum HighlightColor {
     Red,
     Green,
@@ -29,28 +31,41 @@ impl fmt::Display for HighlightColor {
     }
 }
 #[derive(Clone)]
-struct TimeSlot {
-    id: u32,
-    start_time: NaiveTime,
-    end_time: NaiveTime,
-    day_colors: RwSignal<HashMap<NaiveDate, HighlightColor>>,
-    weekend: bool
+pub struct TimeSlot {
+    pub id: u32,
+    pub _start_time: NaiveTime,
+    pub _end_time: NaiveTime,
+    pub day_colors: RwSignal<HashMap<NaiveDate, HighlightColor>>,
+    pub weekend: bool
 }
 
-#[derive(Clone, PartialEq)]
-struct DayColor {
-    date: NaiveDate,
-    color: HighlightColor
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SendSlot {
+    pub id: u32,
+    pub _start_time: String,
+    pub _end_time: String,
+    pub day_colors: HashMap<String, HighlightColor>,
+    pub weekend: bool
 }
+
+
+
 
 #[component]
-pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal<HighlightColor>, curr_date: Signal<DateTime<Local>>) -> impl IntoView {
+pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal<HighlightColor>, curr_date: Signal<DateTime<Local>>
+, submit_action: Action<Vec<TimeSlot>, Result<String, ServerFnError>>
+) -> impl IntoView {
     let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
     let (timeslots, set_timeslots) = create_signal(vec![]);
     let (select_current,set_select_current) = create_signal(0);
     let time_calc = vec!["06","07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
     let weekdate = move |x: u32| {
-    curr_date().date_naive().checked_add_signed(Duration::days((i64::from(x)-i64::from(curr_date().weekday().num_days_from_sunday())).into())).unwrap()};
+        curr_date().date_naive().checked_add_signed(Duration::days((i64::from(x)-i64::from(curr_date().weekday().num_days_from_sunday())).into())).unwrap()
+    };
+
+    //TODO: Fix input data
+    
+
 
 
     for i in 0..=230 {
@@ -58,8 +73,8 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
         set_timeslots.update(|vec| {
             vec.push(TimeSlot {
                 id: i,
-                start_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED VALUE: Time Start"),
-                end_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED VALUE: Time End"),
+                _start_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED VALUE: Time Start"),
+                _end_time: NaiveTime::from_hms_opt(time_calc[index].parse::<u32>().unwrap(),if (i/7)%2==1 { 0 } else { 30 },0).expect("HARDCODED VALUE: Time End"),
                 day_colors: create_rw_signal(HashMap::new()),
                 weekend: i % 7 == 0 || i % 7 == 6
             })});
@@ -76,8 +91,6 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
                 //         *color = HighlightColor::None;
                 //     }
                 // });
-                //TODO: Make this only use the day_colors signal syncing the state with out a derived signal is impossible, 
-                // this or make it a derived signal with condition for other colors
                 slot.day_colors.update(move |colors| {
                     if colors.get(&weekdate(child_id%7)).unwrap_or(&HighlightColor::None) != &set_color {
                         colors.insert(weekdate(child_id%7),set_color);
@@ -91,10 +104,10 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
     };
 
     let areaSelect = move |child_id: u32, set_color: HighlightColor| {
-        let row_begin =move || cmp::min(child_id/7,(select_current()-1)/7);
-        let row_end =move ||  cmp::max(child_id/7,(select_current()-1)/7);
-        let col_begin =move ||  cmp::min(child_id%7,(select_current()-1)%7); 
-        let col_end =move ||  cmp::max(child_id%7,(select_current()-1)%7);
+        let row_begin = move || cmp::min(child_id/7,(select_current()-1)/7);
+        let row_end =   move ||  cmp::max(child_id/7,(select_current()-1)/7);
+        let col_begin = move ||  cmp::min(child_id%7,(select_current()-1)%7); 
+        let col_end =   move ||  cmp::max(child_id%7,(select_current()-1)%7);
         timeslots.with(|slots| {
             slots.into_iter().filter(|box_div| 
                 row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
@@ -179,7 +192,11 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
             />
             </For>
         </div>
-        <button>
+        <button
+        on:click=move |_| {
+            submit_action.dispatch(timeslots())
+        }
+        >
             "Submit Data"
         </button>
     }
