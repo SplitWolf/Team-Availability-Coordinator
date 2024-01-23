@@ -14,6 +14,6 @@ services:
     environment:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=dbuser
-      - POSTGRES_DB=availbility
+      - POSTGRES_DB=avalibility
 volumes:
   team-avail-data:
