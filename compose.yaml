@@ -4,3 +4,16 @@ services:
     ports:
       - 127.0.0.1:3000:3000
     working_dir: /usr/app
+  db:
+    image: postgres:16.1-alpine
+    volumes:
+      - team-avail-data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=dbuser
+      - POSTGRES_DB=availbility
+volumes:
+  team-avail-data:
