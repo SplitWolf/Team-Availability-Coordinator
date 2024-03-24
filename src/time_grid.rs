@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::{ DateTime, Local, NaiveDate, NaiveTime, Duration, Datelike};
 use leptos::*;
 use serde::{Serialize, Deserialize};
-
+use leptos::logging::log;
 
 #[derive(PartialEq,Clone, Copy)]
 pub enum SelectionMode  {
@@ -44,6 +44,7 @@ pub struct SendSlot {
     pub id: u32,
     pub _start_time: String,
     pub _end_time: String,
+    #[serde(default)]
     pub day_colors: HashMap<String, HighlightColor>,
     pub weekend: bool
 }
@@ -53,7 +54,7 @@ pub struct SendSlot {
 
 #[component]
 pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal<HighlightColor>, curr_date: Signal<DateTime<Local>>
-, submit_action: Action<Vec<TimeSlot>, Result<String, ServerFnError>>
+, submit_action: Action<Vec<TimeSlot>, Result<String, ServerFnError>> , repeat_weekly: ReadSignal<bool>
 ) -> impl IntoView {
     let time = vec!["07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22" ];
     let (timeslots, set_timeslots) = create_signal(vec![]);
@@ -113,11 +114,10 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
                 row_begin() <= box_div.id/7 && box_div.id/7 <= row_end() 
                 && col_begin() <= box_div.id%7 && box_div.id%7 <= col_end() ).for_each(|slot| {
                     slot.day_colors.update(move |colors| {
+                        if repeat_weekly() {
+                            colors.insert(NaiveDate::from_ymd_opt(0, 1, 1).expect("HARDCODED"),set_color);
+                        } 
                         colors.insert(weekdate(slot.id%7),set_color);
-                        // if colors.get(&weekdate(child_id%7)).unwrap_or(&HighlightColor::None) != &set_color {
-                        // } else {
-                        //     colors.insert(weekdate(child_id%7),HighlightColor::None);
-                        // }
                     });
             });
             set_select_current.update(|value| {
@@ -150,13 +150,16 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
             class="box" 
             class:weekend={ move || child.weekend}
             class:highlight-red={move || 
-                (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Red
+                (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Red ||
+                (child.day_colors)().get(&NaiveDate::from_ymd_opt(0,1,1).expect("HARDCODED")).unwrap_or(&HighlightColor::None) == &HighlightColor::Red
             }
             class:highlight-yellow={move || 
-                (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Yellow
+                (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Yellow ||
+                (child.day_colors)().get(&NaiveDate::from_ymd_opt(0,1,1).expect("HARDCODED")).unwrap_or(&HighlightColor::None) == &HighlightColor::Yellow
             }
             class:highlight-green={move || 
-                (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Green
+                (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Green ||
+                (child.day_colors)().get(&NaiveDate::from_ymd_opt(0,1,1).expect("HARDCODED")).unwrap_or(&HighlightColor::None) == &HighlightColor::Green
             }
             class:highlight-select={
                 move || (child.day_colors)().get(&weekdate(child.id%7)).unwrap_or(&HighlightColor::None) == &HighlightColor::Select
@@ -194,7 +197,9 @@ pub fn TimeGrid(select_mode: ReadSignal<SelectionMode>, select_color: ReadSignal
         </div>
         <button
         on:click=move |_| {
-            submit_action.dispatch(timeslots())
+            submit_action.dispatch(timeslots());
+            let test = submit_action.value();
+            log!("{}", test().unwrap().unwrap());
         }
         >
             "Submit Data"
