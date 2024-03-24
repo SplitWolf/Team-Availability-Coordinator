@@ -8,13 +8,32 @@ use  std::fs;
 
 #[server(Update, "/api")]
 pub async fn update_db(user: String, times: Vec<SendSlot>) -> Result<String, ServerFnError> {
-    let toWrite =  times.iter().map(|slot| {
-        format!("ID: {}, COLOR:",slot.id)
-    }).collect::<Vec<_>>();
-    toWrite.iter().for_each(|data| {
-        let q = fs::write("/data.txt",data);
-        logging::log!("{}",q.is_ok());
-    });
+    // New data structure HashMap<Color, HashMap<Date, Timeblocks>>
+    // Timeblock { start: Time, end: Time }
 
-    Ok("".to_string())
+    dbg!(&times.clone()[230].day_colors);
+
+    for (key, val) in times.clone()[230].day_colors.iter() {
+        println!("Key: {}, Val: {val}",str::replace(key, "99","-"));
+    }
+    for value in times.clone() {
+        for (mut key, val) in value.day_colors {
+            key = str::replace(&key, "99","-");
+            println!("{0} {key}, {val}",value._start_time)
+        }
+    }
+
+    use sqlx::Connection;
+    use sqlx::Row;
+    let url = "postgres://dbuser:password@127.0.0.1:5432/avalibility";
+    let mut conn = sqlx::postgres::PgConnection::connect(url).await?;
+
+    let res = sqlx::query("SELECT 1 + 1 as sum")
+    .fetch_one(&mut conn)
+    .await?;
+    
+    let sum: i32 = res.get("sum");
+    println!("{}", sum);
+
+    Ok(format!("{}", 0))
 }
