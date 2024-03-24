@@ -1,21 +1,27 @@
-      # CREATE TABLE players(id SERIAL PRIMARY KEY, name varchar(20));
-      # CREATE TABLE player_avalibility(
-      #   player_id int REFERENCES players(id), 
-      #   week_avaliblity_id int REFERENCES weekly_avalibility(id), 
-      #   daily_avalibility_id int REFERENCES daily_avalibility(id)
-      # );
-      # CREATE TABLE weekly_avalibility(
-      #   id SERIAL PRIMARY KEY, 
-      #   day_of_week int, from_available time[], 
-      #   to_available time[], 
-      #   from_with_warn time[],
-      #   to_with_warn time[]
-      #   );
-      # CREATE TABLE daily_avalibility(
-      #     id SERIAL PRIMARY KEY, 
-      #     day_of_week int, 
-      #     from_available time[], 
-      #     to_available time[], 
-      #     from_with_warn time[], 
-      #     to_with_warn time[])
-      #     );
+ CREATE TABLE players(id SERIAL PRIMARY KEY, name varchar(20));
+
+ CREATE TABLE player_avalibility(
+   player_id int REFERENCES players(id), 
+   week_avaliblity_id int REFERENCES weekly_avalibility(id), 
+   daily_avalibility_id int REFERENCES daily_avalibility(id)
+ );
+
+ CREATE TABLE weekly_avalibility(
+   id SERIAL PRIMARY KEY, 
+   day_of_week int, 
+   from_available time[], 
+   to_available time[], 
+   from_with_warn time[],
+   to_with_warn time[]
+   );
+   
+ CREATE TABLE daily_avalibility(
+     id SERIAL PRIMARY KEY, 
+     day_of_week int, 
+     from_available time[], 
+     to_available time[], 
+     from_with_warn time[], 
+     to_with_warn time[]
+);
+
+ docker compose exec db psql -U dbuser avalibility
