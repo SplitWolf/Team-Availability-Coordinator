@@ -61,8 +61,10 @@ fn HomePage() -> impl IntoView {
     let players: Vec<&str> = vec!["Zero", "Jordan", "Sword", "Fat Choungus Fungus", "Beeman", "Noshed", "Overrider"];
     let modes: Vec<&str> = vec!["Single", "Area Select", "Area Deselect"];
     let colors: Vec<&str> = vec!["Green", "Yellow","Red" ];
+    let repeating: Vec<&str> = vec!["Only this week", "Repeat Weekely"];
     let (selected_color,set_selected_color) = create_signal(HighlightColor::Green);
     let (select_mode, set_select_mode) = create_signal(SelectionMode::Single);
+    let (repeat_weekly, set_repeat_weekly) = create_signal(false);
 
     view! {
         <h1 class="center"> "Team Availablity Coordinator" </h1>
@@ -76,6 +78,7 @@ fn HomePage() -> impl IntoView {
                   _ => ()
                 };
             }/>
+            //TODO: Fix Ids
             <SelectMenu id=id options=colors on_change=move |ev| {
                // logging::log!("test {}",event_target_value(&ev));
                 match event_target_value(&ev).as_str() {
@@ -86,7 +89,14 @@ fn HomePage() -> impl IntoView {
                 };
             } />
             </div>
-        <crate::calendar::Calendar color=selected_color mode=select_mode/>
+            <SelectMenu id=id options=repeating on_change=move |ev| {
+                match event_target_value(&ev).as_str() {
+                    "Only this week" => set_repeat_weekly.update(|val| *val = false),
+                    "Repeat Weekely" => set_repeat_weekly.update(|val| *val = true),
+                    _ => ()
+                };
+            }/>
+        <crate::calendar::Calendar color=selected_color mode=select_mode repeat_weekly/>
     }
 }
 

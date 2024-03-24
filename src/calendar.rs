@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use std::collections::HashMap;
+use leptos::logging::log;
 use leptos::*;
 use chrono::{Datelike, Duration, Days as Day};
 // Submit Action Imports
@@ -24,7 +25,7 @@ pub fn Days(numbers_from_sun: Signal<Vec<u32>>) -> impl IntoView {
 }
 
 #[component]
-pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<time_grid::SelectionMode>) -> impl IntoView {
+pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<time_grid::SelectionMode>, repeat_weekly: ReadSignal<bool>) -> impl IntoView {
     // Get the date reference
     // Temp Weekoffset signinal if
     let (weekOffset, set_weekOffset) = create_signal(0);
@@ -57,14 +58,18 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<t
     };    
 
     let submit_action = create_action(move |input: &Vec<TimeSlot>| {
-
+//str::replace(&date.to_string(),"-",":")
         let toSend = input.clone().iter().map(move |data: &TimeSlot| {
+            log!("{:?}",dbg!(data.day_colors.get().iter().map(move |(date, color)|{
+                (str::replace(&date.to_string(),"-",""), *color)
+            }).collect::<HashMap<String,HighlightColor>>()));
             SendSlot { 
                 id: data.id, 
                 _start_time: data._start_time.to_string(), 
                 _end_time: data._end_time.to_string(), 
+                //TODO: Maybe make this into a vec with tuples?
                 day_colors: data.day_colors.get().iter().map(move |(date, color)|{
-                    (date.to_string(), *color)
+                    (str::replace(&date.to_string(),"-","99"), *color)
                 }).collect::<HashMap<String,HighlightColor>>(), 
                 weekend: data.weekend
             }
@@ -84,7 +89,7 @@ pub fn Calendar(color: ReadSignal<time_grid::HighlightColor>, mode: ReadSignal<t
             </div>
            <Days numbers_from_sun/>
         //    <br/>
-           <time_grid::TimeGrid select_mode=mode select_color=color curr_date=date submit_action/>
+           <time_grid::TimeGrid select_mode=mode select_color=color curr_date=date submit_action repeat_weekly/>
         //    { weekOffset }
         //    <br/>
         //    { reverseOffset }
